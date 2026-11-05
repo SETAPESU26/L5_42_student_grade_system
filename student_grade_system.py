@@ -11,11 +11,19 @@ gradebook = {
 }
 
 
+def average_mark(student_id):
+    """Return a student's average mark, or None if there is none."""
+    student = gradebook.get(student_id)
+    if student is None or not student["marks"]:
+        return None
+    return sum(student["marks"]) / len(student["marks"])
+
+
 def add_grade(student_id, mark, grade_list=None):
     """Record a mark for a student and return whether it was accepted."""
     if grade_list is None:
         grade_list = []
-    if student_id not in gradebook or mark < 0:
+    if student_id not in gradebook or not 0 <= mark <= 100:
         return False
     gradebook[student_id]["marks"].append(mark)
     grade_list.append(f"Recorded score {mark} for student id {student_id}")
@@ -24,7 +32,7 @@ def add_grade(student_id, mark, grade_list=None):
 
 def record_attendance(student_id, present_days):
     """Add attendance for a student and return whether it was recorded."""
-    if student_id not in gradebook:
+    if student_id not in gradebook or present_days < 0:
         return False
     gradebook[student_id]["attendance"] += present_days
     return True
@@ -33,17 +41,17 @@ def record_attendance(student_id, present_days):
 def check_passing_status(student_id, pass_threshold=50.0):
     """Return whether a student's average, plus grace marks, passes."""
     grace_marks = 5.0
-    if gradebook.get(student_id) is None:
+    avg = average_mark(student_id)
+    if avg is None:
         return False
-    marks = gradebook[student_id]["marks"]
-    avg = sum(marks) / len(marks)
     return avg + grace_marks >= pass_threshold
 
 
 def compute_weighted_gpa(student_id, scale_divisor=20.0):
-    """Return a student's average mark divided by scale_divisor."""
-    marks = gradebook[student_id]["marks"]
-    avg_score = sum(marks) / len(marks)
+    """Return average mark / scale_divisor, or None without marks."""
+    avg_score = average_mark(student_id)
+    if avg_score is None:
+        return None
     return avg_score / scale_divisor
 
 
@@ -77,4 +85,5 @@ def main():
     print("Portal token active:", portal_token is not None)
 
 
-main()
+if __name__ == "__main__":
+    main()
